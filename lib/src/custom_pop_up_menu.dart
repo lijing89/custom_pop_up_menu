@@ -16,6 +16,7 @@ enum PreferredPosition {
 class CustomPopupMenuController extends ChangeNotifier {
   bool menuIsShowing = false;
   Offset menuOffset = Offset.zero;
+  double scaleY = 0;
 
   void showMenu() {
     menuIsShowing = true;
@@ -223,6 +224,7 @@ class _CustomPopupMenuState extends State<CustomPopupMenu> {
         onLongPressStart: (details) {
           if (widget.pressType == PressType.longPress && _canResponse) {
             _controller?.menuOffset = details.localPosition;
+            _controller?.scaleY = (_childBox?.size.height ?? 0)/(_parentBox?.size.height??1);
             _controller?.showMenu();
           }
         },
@@ -348,13 +350,14 @@ class _MenuLayoutDelegate extends MultiChildLayoutDelegate {
         );
         break;
       case _MenuPosition.topCenter:
+        double tempY = ((controller?.scaleY??0)<.6)? 0:(controller?.menuOffset.dy??0);
         arrowOffset = Offset(
           anchorCenterX - arrowSize.width / 2,
-          anchorTopY - verticalMargin - arrowSize.height + (controller?.menuOffset.dy??0),
+          anchorTopY - verticalMargin - arrowSize.height + tempY,
         );
         contentOffset = Offset(
           anchorCenterX - contentSize.width / 2,
-          anchorTopY - verticalMargin - arrowSize.height - contentSize.height + (controller?.menuOffset.dy??0),
+          anchorTopY - verticalMargin - arrowSize.height - contentSize.height + tempY,
         );
         break;
       case _MenuPosition.topLeft:
