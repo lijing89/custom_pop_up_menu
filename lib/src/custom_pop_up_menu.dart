@@ -15,6 +15,7 @@ enum PreferredPosition {
 
 class CustomPopupMenuController extends ChangeNotifier {
   bool menuIsShowing = false;
+  Offset menuOffset = Offset.zero;
 
   void showMenu() {
     menuIsShowing = true;
@@ -105,6 +106,7 @@ class _CustomPopupMenuState extends State<CustomPopupMenu> {
                 ),
                 verticalMargin: widget.verticalMargin,
                 position: widget.position,
+                controller: _controller,
               ),
               children: <Widget>[
                 if (widget.showArrow)
@@ -211,19 +213,16 @@ class _CustomPopupMenuState extends State<CustomPopupMenu> {
   @override
   Widget build(BuildContext context) {
     var child = Material(
-      child: InkWell(
-        hoverColor: Colors.transparent,
-        focusColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
+      child: GestureDetector(
         child: widget.child,
         onTap: () {
           if (widget.pressType == PressType.singleClick && _canResponse) {
             _controller?.showMenu();
           }
         },
-        onLongPress: () {
+        onLongPressStart: (details) {
           if (widget.pressType == PressType.longPress && _canResponse) {
+            _controller?.menuOffset = details.localPosition;
             _controller?.showMenu();
           }
         },
@@ -265,12 +264,14 @@ class _MenuLayoutDelegate extends MultiChildLayoutDelegate {
     required this.anchorOffset,
     required this.verticalMargin,
     this.position,
+    this.controller,
   });
 
   final Size anchorSize;
   final Offset anchorOffset;
   final double verticalMargin;
   final PreferredPosition? position;
+  final CustomPopupMenuController? controller;
 
   @override
   void performLayout(Size size) {
@@ -349,11 +350,11 @@ class _MenuLayoutDelegate extends MultiChildLayoutDelegate {
       case _MenuPosition.topCenter:
         arrowOffset = Offset(
           anchorCenterX - arrowSize.width / 2,
-          anchorTopY - verticalMargin - arrowSize.height,
+          anchorTopY - verticalMargin - arrowSize.height + (controller?.menuOffset.dy??0),
         );
         contentOffset = Offset(
           anchorCenterX - contentSize.width / 2,
-          anchorTopY - verticalMargin - arrowSize.height - contentSize.height,
+          anchorTopY - verticalMargin - arrowSize.height - contentSize.height + (controller?.menuOffset.dy??0),
         );
         break;
       case _MenuPosition.topLeft:
